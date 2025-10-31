@@ -1,0 +1,11 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: my-first-topic
+  namespace: kafka
+  labels:
+    # Link this topic to your cluster
+    strimzi.io/cluster: "my-cluster"
+spec:
+  partitions: 3
+  replicas: 3

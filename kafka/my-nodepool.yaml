@@ -1,0 +1,21 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: combined-pool
+  namespace: kafka
+  labels:
+    # This label is critical - it links the pool to the cluster
+    strimzi.io/cluster: my-cluster
+spec:
+  # We want 3 replicas that act as both brokers and controllers
+  replicas: 3
+  roles:
+  - broker
+  - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 100Gi
+        deleteClaim: true

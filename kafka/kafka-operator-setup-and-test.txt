@@ -1,0 +1,172 @@
+Here is a complete, step-by-step guide based on our successful session.
+
+-----
+
+## 🚀 Guide: Install & Test Kafka on Kubernetes with Strimzi
+
+This guide walks through installing the Strimzi operator, deploying a modern KRaft-based Kafka cluster, creating a topic, and testing it with a command-line producer and consumer.
+
+### Step 1: Install the Strimzi Operator
+
+First, we use Helm to install the Strimzi operator, which will manage our Kafka cluster.
+
+```bash
+# 1. Add the Strimzi Helm repository
+helm repo add strimzi https://strimzi.io/charts/
+
+# 2. Update your Helm repositories
+helm repo update
+
+# 3. Install the Strimzi operator into the 'kafka' namespace
+helm install strimzi-operator strimzi/strimzi-kafka-operator \
+  --namespace kafka \
+  --create-namespace
+```
+
+[cite\_start][cite: 1]
+
+-----
+
+### Step 2: Deploy the Kafka Cluster
+
+With the latest Strimzi, we deploy the cluster using two separate resource files: `Kafka` (for the cluster-wide configuration) and `KafkaNodePool` (for the brokers).
+
+**1. Create `my-kafka-cluster.yaml`:**
+This file defines the Kafka version, network listeners, and topic/user operators.
+
+```yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: my-cluster
+  namespace: kafka
+spec:
+  kafka:
+    version: 4.1.0
+    listeners:
+      # Listener for internal cluster communication (pods)
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      # Listener for external communication (your local machine / UI)
+      - name: external
+        port: 9094
+        type: nodeport
+        tls: false
+  
+  # The Entity Operator manages topics and users for us
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+```
+
+**2. Create `my-nodepool.yaml`:**
+This file defines our 3 cluster nodes, their roles (broker and controller for KRaft), and their storage.
+
+```yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: combined-pool
+  namespace: kafka
+  labels:
+    # This label links this pool to the 'my-cluster' Kafka resource
+    strimzi.io/cluster: my-cluster
+spec:
+  replicas: 3
+  roles:
+  - broker
+  - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 100Gi
+        deleteClaim: true
+```
+
+**3. Apply both files:**
+
+```bash
+kubectl apply -f my-kafka-cluster.yaml -n kafka
+kubectl apply -f my-nodepool.yaml -n kafka
+```
+
+-----
+
+### Step 3: Create a Kafka Topic
+
+Now, we create a topic definition. The `topicOperator` we enabled in Step 2 will automatically create this topic inside Kafka.
+
+**1. Create `my-first-topic.yaml`:**
+
+```yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: my-first-topic
+  namespace: kafka
+  labels:
+    # This label links this topic to our 'my-cluster'
+    strimzi.io/cluster: "my-cluster"
+spec:
+  partitions: 3
+  replicas: 3
+```
+
+**2. Apply the file:**
+
+```bash
+kubectl apply -f my-first-topic.yaml -n kafka
+```
+
+-----
+
+### Step 4: Test with a Producer and Consumer
+
+Open two separate terminals to run a live test.
+
+**1. In Terminal 1 (Run the Consumer):**
+This command starts a consumer pod that connects to the topic and waits for messages.
+
+```bash
+kubectl run kafka-consumer -ti --image=quay.io/strimzi/kafka:latest-kafka-4.1.0 --rm=true --restart=Never --namespace=kafka -- \
+bin/kafka-console-consumer.sh \
+  --bootstrap-server my-cluster-kafka-bootstrap:9092 \
+  --topic my-first-topic \
+  --from-beginning
+```
+
+**2. In Terminal 2 (Run the Producer):**
+This command starts a producer pod. It will connect and give you a `>` prompt.
+
+```bash
+kubectl run kafka-producer -ti --image=quay.io/strimzi/kafka:latest-kafka-4.1.0 --rm=true --restart=Never --namespace=kafka -- \
+bin/kafka-console-producer.sh \
+  --bootstrap-server my-cluster-kafka-bootstrap:9092 \
+  --topic my-first-topic
+```
+
+**3. Send a Message:**
+Type `Hello world` into **Terminal 2 (Producer)** and press Enter. You will see `Hello world` appear instantly in **Terminal 1 (Consumer)**.
+
+-----
+
+### Step 5: (Optional) Clean Up
+
+To remove all components, run these commands:
+
+```bash
+# Delete the topic, cluster, and nodepool
+kubectl delete kafkatopic my-first-topic -n kafka
+kubectl delete kafkanodepool combined-pool -n kafka
+kubectl delete kafka my-cluster -n kafka
+
+# Uninstall the Strimzi operator
+helm uninstall strimzi-operator --namespace kafka
+
+# Optional: delete the namespace
+kubectl delete namespace kafka
+```
