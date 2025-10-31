@@ -3,6 +3,7 @@ set -e
 
 REPO_URL="https://github.com/liormilliger/kafka-data-shipper.git"
 PROJECT_DIR="kafka-data-shipper"
+COMPOSE_FILE="docker-compose.yaml" # Default compose file name
 
 echo "--- 1. Updating packages and installing dependencies ---"
 sudo apt-get update -y
@@ -37,7 +38,34 @@ echo
 echo "--- ✅ All builds complete. ---"
 echo
 
-echo "--- 6. Starting the entire application stack (MySQL & KRaft Kafka) ---"
+echo "--- 6. Generating KRaft Cluster ID ---"
+echo "Pulling Kafka image to generate Cluster ID..."
+sudo docker pull confluentinc/cp-kafka:latest
+echo "Generating Cluster ID..."
+KAFKA_CLUSTER_ID=$(sudo docker run --rm confluentinc/cp-kafka:latest kafka-storage random-uuid)
+
+if [ -z "$KAFKA_CLUSTER_ID" ]; then
+    echo "❌ ERROR: Failed to generate Kafka Cluster ID. Exiting."
+    exit 1
+fi
+echo "Successfully generated Cluster ID: $KAFKA_CLUSTER_ID"
+
+echo
+echo "--- 7. Updating $COMPOSE_FILE with Cluster ID ---"
+# This assumes the placeholder is 'PASTE_YOUR_GENERATED_UUID_HERE'
+# We use a different sed delimiter (%) because the ID might contain slashes (/)
+sudo sed -i "s%CLUSTER_ID: 'PASTE_YOUR_GENERATED_UUID_HERE'%CLUSTER_ID: '$KAFKA_CLUSTER_ID'%" $COMPOSE_FILE
+
+# Verify replacement
+if ! grep -q "CLUSTER_ID: '$KAFKA_CLUSTER_ID'" $COMPOSE_FILE; then
+    echo "❌ ERROR: Failed to update $COMPOSE_FILE with Cluster ID."
+    echo "Please check the placeholder text in your YAML file."
+    exit 1
+fi
+echo "Successfully updated $COMPOSE_FILE."
+echo
+
+echo "--- 8. Starting the entire application stack (MySQL & KRaft Kafka) ---"
 sudo docker-compose up --build -d
 
 echo
