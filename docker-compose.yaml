@@ -13,7 +13,8 @@ services:
       - ./common-files/init.sql:/docker-entrypoint-initdb.d/init.sql
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-p123456"]
+      # It will only pass when the database is fully ready.
+      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p123456", "-e", "SELECT 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -34,8 +35,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_OFFSETS_TOP_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CLUSTER_ID: '${KAFKA_CLUSTER_ID}'
-
+      CLUSTER_ID: 'PASTE_YOUR_GENERATED_UUID_HERE'
     volumes:
       - kafka-data:/var/lib/kafka/data
       
