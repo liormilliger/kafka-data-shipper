@@ -57,10 +57,10 @@ The pipeline's flow is as follows:
 
 * Git
 * Maven
-* Docker & `docker-compose`
-* `kubectl`
-* `helm`
-* `terraform`
+* Docker & docker-compose
+* kubectl
+* helm
+* terraform
 * AWS CLI configured with appropriate permissions
 
 ---
