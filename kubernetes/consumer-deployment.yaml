@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      initContainers:
+      - name: wait-for-producer
+        image: busybox:1.36
+        # Command to wait until the producer-service is reachable on port 8080
+        command: ['sh', '-c', 'until nc -z producer-service 8080; do echo "Waiting for Producer..."; sleep 2; done;']
+      containers:
+      - name: consumer
+        # --- IMPORTANT ---
+        # Replace YOUR_AWS_ACCOUNT_ID with your actual account ID
+        image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-1.amazonaws.com/kafka-data-shipper:consumer-latest
+        ports:
+        - containerPort: 8080 # Assuming consumer also runs on 8080
+        envFrom:
+          - secretRef:
+              name: mysql-secret # Assumes consumer needs DB credentials
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 45
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 45
+          periodSeconds: 15
