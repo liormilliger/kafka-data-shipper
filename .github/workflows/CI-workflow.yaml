@@ -124,7 +124,7 @@ jobs:
       - name: Build and push producer Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_BASE }}/producer:${{ env.IMAGE_TAG }}
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_BASE }}:producer-${{ env.IMAGE_TAG }}
         run: |
           docker build -t $IMAGE_URI -f producer-build-context/Dockerfile producer-build-context
           docker push $IMAGE_URI
@@ -132,7 +132,7 @@ jobs:
       - name: Build and push consumer Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BASE }}/consumer:${{ env.IMAGE_TAG }}
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_BASE }}:consumer-${{ env.IMAGE_TAG }}
         run: |
           docker build -t $IMAGE_URI -f consumer-build-context/Dockerfile consumer-build-context
           docker push $IMAGE_URI
