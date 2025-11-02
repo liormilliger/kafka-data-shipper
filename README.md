@@ -1,4 +1,3 @@
-```markdown
 # Kafka Data Shipper Pipeline
 
 This project is a complete, end-to-end data pipeline created as a DevOps home assignment. It demonstrates a robust system for shipping data from a MySQL database to a Kafka cluster and back, all deployed on Kubernetes using Infrastructure as Code (IaC) and automated CI/CD.
@@ -50,7 +49,7 @@ The pipeline's flow is as follows:
 ├── terraform/              \# Terraform modules for AWS infrastructure (EKS, VPC)
 └── README.md               \# This file
 
-````
+```
 
 ## 🚀 Getting Started
 
@@ -155,7 +154,6 @@ This single Helm chart will deploy the Strimzi operator (as a dependency or prer
     You **must** update `kubernetes/values.yaml` (or create a `my-values.yaml`) to point to the ECR images pushed in Step 1.
 
     ```yaml
-    # Example values to override in kubernetes/values.yaml
     awsAccountID: "YOUR_AWS_ACCOUNT_ID"
 
     producer:
@@ -168,7 +166,6 @@ This single Helm chart will deploy the Strimzi operator (as a dependency or prer
         repository: "kafka-data-shipper"
         tag: "consumer-latest"
     
-    # Ensure this matches your Kafka cluster's bootstrap service
     kafkaBootstrapServers: "my-kafka-cluster-kafka-bootstrap:9092" 
     ```
 
@@ -201,5 +198,4 @@ kubectl logs -f -n kafka -l app=producer
 kubectl logs -f -n kafka -l app=consumer
 ````
 
-```
 ```
