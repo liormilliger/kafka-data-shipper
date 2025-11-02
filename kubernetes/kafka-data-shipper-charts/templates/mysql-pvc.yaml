@@ -5,7 +5,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: gp3
+  storageClassName: {{ .Values.storageClass.name }}
   resources:
     requests:
-      storage: 10Gi
+      storage: {{ .Values.mysql.storage.size }}

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consumer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: consumer
+  template:
+    metadata:
+      labels:
+        app: consumer
+    spec:
+      initContainers:
+        - name: wait-for-producer
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z producer-service {{ .Values.producer.port }}; do echo waiting for producer; sleep 2; done;']
+      
+      containers:
+        - name: consumer
+          image: "{{ .Values.awsAccountID }}.dkr.ecr.us-east-1.amazonaws.com/{{ .Values.consumer.image.repository }}:{{ .Values.consumer.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.consumer.port }}
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.kafkaBootstrapServers | quote }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-service:3306/{{ .Values.mysql.database }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.mysql.rootPassword | quote }}
+              
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ .Values.consumer.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.consumer.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10

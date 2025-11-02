@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer
+  template:
+    metadata:
+      labels:
+        app: producer
+    spec:
+      initContainers:
+        - name: wait-for-mysql
+          image: busybox:1.28
+          command: ['sh', '-c', 'until nc -z mysql-service 3306; do echo waiting for mysql; sleep 2; done;']
+      
+      containers:
+        - name: producer
+          image: "{{ .Values.awsAccountID }}.dkr.ecr.us-east-1.amazonaws.com/{{ .Values.producer.image.repository }}:{{ .Values.producer.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.producer.port }}
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: {{ .Values.kafkaBootstrapServers | quote }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://mysql-service:3306/{{ .Values.mysql.database }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "root"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.mysql.rootPassword | quote }}
+          
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ .Values.producer.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.producer.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
