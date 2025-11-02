@@ -33,5 +33,11 @@ module "eks" {
   kafka_data_shipper_namespace    = var.kafka_data_shipper_namespace
 
   depends_on = [module.vpc]
+  
+  providers = {
+    kubernetes = kubernetes.eks
+    helm       = helm.eks
+    kubectl    = kubectl # Assumes 'kubectl' is the unaliased provider in your root
+  }
 }
 
