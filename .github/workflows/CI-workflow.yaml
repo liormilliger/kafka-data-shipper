@@ -10,17 +10,95 @@ env:
   IMAGE_TAG: latest
 
 jobs:
-  build-and-push:
+  build-common:
     runs-on: ubuntu-latest
-    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build common module
+        run: mvn install -f common-files/common/pom.xml
+
+      - name: Upload local maven repository
+        uses: actions/upload-artifact@v4
+        with:
+          name: m2-repository
+          path: ~/.m2/repository
+          retention-days: 1
+
+  build-producer:
+    needs: build-common
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download local maven repository
+        uses: actions/download-artifact@v4
+        with:
+          name: m2-repository
+          path: ~/.m2/repository
+
+      - name: Build producer module
+        run: mvn package -DskipTests -f common-files/producer/pom.xml
+
+      - name: Upload producer build context
+        uses: actions/upload-artifact@v4
+        with:
+          name: producer-build-context
+          path: common-files/producer
+          retention-days: 1
+
+  build-consumer:
+    needs: build-common
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download local maven repository
+        uses: actions/download-artifact@v4
+        with:
+          name: m2-repository
+          path: ~/.m2/repository
+
+      - name: Build consumer module
+        run: mvn package -DskipTests -f common-files/consumer/pom.xml
+
+      - name: Upload consumer build context
+        uses: actions/upload-artifact@v4
+        with:
+          name: consumer-build-context
+          path: common-files/consumer
+          retention-days: 1
+
+  push-images:
+    needs: [build-producer, build-consumer]
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -31,28 +109,31 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Download producer build context
+        uses: actions/download-artifact@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          name: producer-build-context
+          path: producer-build-context
 
-      - name: Build with Maven in Parallel (Skip Tests)
-        run: mvn -T 1C package -DskipTests
+      - name: Download consumer build context
+        uses: actions/download-artifact@v4
+        with:
+          name: consumer-build-context
+          path: consumer-build-context
 
       - name: Build and push producer Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_BASE }}/producer:${{ env.IMAGE_TAG }}
         run: |
-          docker build -t $IMAGE_URI -f producer/Dockerfile .
+          docker build -t $IMAGE_URI -f producer-build-context/Dockerfile producer-build-context
           docker push $IMAGE_URI
 
       - name: Build and push consumer Docker image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPO_BASE }}/consumer:${{ env.IMAGE_TAG }}
+          IMAGE_URI: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_BASE }}/consumer:${{ env.IMAGE_TAG }}
         run: |
-          docker build -t $IMAGE_URI -f consumer/Dockerfile .
+          docker build -t $IMAGE_URI -f consumer-build-context/Dockerfile consumer-build-context
           docker push $IMAGE_URI
 
