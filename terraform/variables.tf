@@ -81,7 +81,7 @@ variable "EbsCredSecret" {
 variable "strimzi_chart_version" {
   description = "Version of the Strimzi Kafka Operator Helm chart."
   type        = string
-  default     = "0.41.0"
+  default     = "0.48.0"
 }
 
 variable "strimzi_namespace" {
@@ -105,5 +105,5 @@ variable "kafka_data_shipper_release_name" {
 variable "kafka_data_shipper_namespace" {
   description = "Namespace to install the kafka-data-shipper app into."
   type        = string
-  default     = "default"
+  default     = "shipper-app"
 }
