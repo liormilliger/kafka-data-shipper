@@ -4,6 +4,8 @@ services:
   mysql:
     image: mysql:8.0
     container_name: mysql
+    networks:
+      - app-network
     ports:
       - "3306:3306"
     environment:
@@ -13,8 +15,7 @@ services:
       - ./common-files/init.sql:/docker-entrypoint-initdb.d/init.sql
       - mysql-data:/var/lib/mysql
     healthcheck:
-      # It will only pass when the database is fully ready.
-      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p123456", "-e", "SELECT 1"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p123456"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,6 +24,8 @@ services:
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
+    networks:
+      - app-network
     ports:
       - "9092:9092"
     environment:
@@ -30,19 +33,24 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
       KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:9093'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://localhost:9092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_OFFSETS_TOP_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       CLUSTER_ID: 'PASTE_YOUR_GENERATED_UUID_HERE'
+      # Fix for single-broker replication
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     volumes:
       - kafka-data:/var/lib/kafka/data
-      
+
   producer:
     build: ./common-files/producer
     container_name: producer
+    networks:
+      - app-network
     depends_on:
       mysql:
         condition: service_healthy
@@ -56,19 +64,37 @@ services:
       SPRING_DATASOURCE_PASSWORD: 123456
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
+  # This service waits for the 'producer' to start, then sleeps
+  # for 30 seconds, and then exits - That's for the Consumer service to succeed and not exit
+  producer-waiter:
+    image: alpine:latest
+    container_name: producer-waiter
+    networks:
+      - app-network
+    depends_on:
+      producer:
+        condition: service_started
+    command: ["/bin/sh", "-c", "echo 'Producer started, waiting 30s before starting consumer...'; sleep 30"]
+
   consumer:
     build: ./common-files/consumer
     container_name: consumer
+    networks:
+      - app-network
     depends_on:
       mysql:
         condition: service_healthy
-      kafka:
-        condition: service_started
+      producer-waiter:
+        condition: service_completed_successfully
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/Payoneer
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: 123456
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   mysql-data:
