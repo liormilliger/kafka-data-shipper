@@ -197,5 +197,3 @@ kubectl get pods -n kafka
 kubectl logs -f -n kafka -l app=producer
 kubectl logs -f -n kafka -l app=consumer
 ````
-
-```
