@@ -77,3 +77,33 @@ variable "EbsCredSecret" {
   description = "Name of the EBS CSI driver secret."
   type        = string
 }
+
+variable "strimzi_chart_version" {
+  description = "Version of the Strimzi Kafka Operator Helm chart."
+  type        = string
+  default     = "0.41.0"
+}
+
+variable "strimzi_namespace" {
+  description = "Namespace to install the Strimzi Kafka Operator into."
+  type        = string
+  default     = "kafka"
+}
+
+variable "kafka_data_shipper_chart_path" {
+  description = "Path to the kafka-data-shipper Helm chart."
+  type        = string
+  default     = "../kubernetes/kafka-data-shipper-charts"
+}
+
+variable "kafka_data_shipper_release_name" {
+  description = "Helm release name for the kafka-data-shipper app."
+  type        = string
+  default     = "kafka-data-shipper"
+}
+
+variable "kafka_data_shipper_namespace" {
+  description = "Namespace to install the kafka-data-shipper app into."
+  type        = string
+  default     = "default"
+}

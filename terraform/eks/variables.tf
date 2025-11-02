@@ -28,6 +28,30 @@ variable "EbsCredSecret" {
   type        = string
 }
 
+variable "strimzi_chart_version" {
+  description = "Version of the Strimzi Kafka Operator Helm chart."
+  type        = string
+}
+
+variable "strimzi_namespace" {
+  description = "Namespace to install the Strimzi Kafka Operator into."
+  type        = string
+}
+
+variable "kafka_data_shipper_chart_path" {
+  description = "Path to the kafka-data-shipper Helm chart."
+  type        = string
+}
+
+variable "kafka_data_shipper_release_name" {
+  description = "Helm release name for the kafka-data-shipper app."
+  type        = string
+}
+
+variable "kafka_data_shipper_namespace" {
+  description = "Namespace to install the kafka-data-shipper app into."
+  type        = string
+}
 
 ####< NETWORK VARS >####
 locals {
@@ -35,6 +59,16 @@ locals {
   private-us-east-1b-id = var.private_subnet_ids[1]
   public-us-east-1a-id  = var.public_subnet_ids[0]
   public-us-east-1b-id  = var.public_subnet_ids[1]
+}
+
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs from the VPC module."
+  type        = list(string)
+}
+
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs from the VPC module."
+  type        = list(string)
 }
 
 variable "private_subnet_ids" {
@@ -78,3 +112,4 @@ variable "node_name" {
   description = "Base name for the EKS nodes."
   type        = string
 }
+
