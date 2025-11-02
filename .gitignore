@@ -1,2 +1,3 @@
-./terraform
-./kafka
+./ec2-setup-script.sh
+./*.txt
+terraform.tfvars

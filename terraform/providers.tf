@@ -22,8 +22,9 @@ terraform {
 
   backend "s3" {
     bucket = "liorm-portfolio-tfstate"
-    key    = "mywebsite-tfstate/terraform.tfstate"
+    key    = "kafka-data-shipper-tfstate/terraform.tfstate"
     region = "us-east-1"
+    dynamodb_table = "terraform-lock-kafka-data-shipper"
   }
 }
 
