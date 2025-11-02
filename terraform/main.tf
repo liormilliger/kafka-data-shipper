@@ -32,15 +32,6 @@ module "eks" {
   kafka_data_shipper_release_name = var.kafka_data_shipper_release_name
   kafka_data_shipper_namespace    = var.kafka_data_shipper_namespace
 
-  # --- ADDED PROVIDERS BLOCK ---
-  # This tells the module to use the aliased providers we configured in providers.tf
-  providers = {
-    kubernetes = kubernetes.eks
-    helm       = helm.eks
-    kubectl    = kubectl # Pass kubectl provider as well
-  }
-
-  # Ensure VPC is created before EKS
   depends_on = [module.vpc]
 }
 

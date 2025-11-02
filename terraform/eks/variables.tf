@@ -53,24 +53,6 @@ variable "kafka_data_shipper_namespace" {
   type        = string
 }
 
-####< NETWORK VARS >####
-locals {
-  private-us-east-1a-id = var.private_subnet_ids[0]
-  private-us-east-1b-id = var.private_subnet_ids[1]
-  public-us-east-1a-id  = var.public_subnet_ids[0]
-  public-us-east-1b-id  = var.public_subnet_ids[1]
-}
-
-variable "private_subnet_ids" {
-  description = "List of private subnet IDs from the VPC module."
-  type        = list(string)
-}
-
-variable "public_subnet_ids" {
-  description = "List of public subnet IDs from the VPC module."
-  type        = list(string)
-}
-
 variable "private_subnet_ids" {
   description = "List of private subnet IDs from the VPC module."
   type        = list(string)
