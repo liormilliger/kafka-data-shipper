@@ -38,8 +38,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      CLUSTER_ID: 'PASTE_YOUR_GENERATED_UUID_HERE'
-      # Fix for single-broker replication
+      CLUSTER_ID: 'PASTE_YOUR_GENERATED_UUID_HERE' #The setup-dev.sh script handles that placeholder with sed
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
@@ -64,8 +63,6 @@ services:
       SPRING_DATASOURCE_PASSWORD: 123456
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
 
-  # This service waits for the 'producer' to start, then sleeps
-  # for 30 seconds, and then exits - That's for the Consumer service to succeed and not exit
   producer-waiter:
     image: alpine:latest
     container_name: producer-waiter

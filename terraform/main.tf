@@ -25,7 +25,6 @@ module "eks" {
   private_subnet_ids  = module.vpc.private_subnet_ids
   public_subnet_ids   = module.vpc.public_subnet_ids
 
-  # --- ADDED VARIABLES for applications ---
   strimzi_chart_version           = var.strimzi_chart_version
   strimzi_namespace               = var.strimzi_namespace
   kafka_data_shipper_chart_path   = var.kafka_data_shipper_chart_path
@@ -37,7 +36,7 @@ module "eks" {
   providers = {
     kubernetes = kubernetes.eks
     helm       = helm.eks
-    kubectl    = kubectl # Assumes 'kubectl' is the unaliased provider in your root
+    kubectl    = kubectl
   }
 }
 

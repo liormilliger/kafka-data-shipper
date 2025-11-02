@@ -1,9 +1,8 @@
-# values.yaml
 # -----------------------------------------------------------------------------
 # Global
 # -----------------------------------------------------------------------------
 awsAccountID: "704505749045"
-kafkaBootstrapServers: "my-kafka-cluster-kafka-bootstrap:9092" # <-- SET THIS
+kafkaBootstrapServers: "my-kafka-cluster-kafka-bootstrap:9092"
 
 
 # -----------------------------------------------------------------------------
@@ -11,7 +10,6 @@ kafkaBootstrapServers: "my-kafka-cluster-kafka-bootstrap:9092" # <-- SET THIS
 # -----------------------------------------------------------------------------
 storageClass:
   # Set to false if you are managing the StorageClass outside of Helm (e.g., with Terraform)
-  # and it already exists in the cluster.
   create: true
   name: gp3
   provisioner: ebs.csi.aws.com
@@ -28,15 +26,12 @@ mysql:
     tag: "8.0"
   
   # Credentials and Database Name
-  # It's recommended to use --set for these or use a secret management system
   database: Payoneer
-  rootPassword: "123456" # <-- Change this for production
+  rootPassword: "123456"
 
-  # PVC Configuration
   storage:
     size: 10Gi
 
-  # init.sql script is now managed in templates/02-mysql-configmap.yml
 
 # -----------------------------------------------------------------------------
 # Producer Application
@@ -46,7 +41,6 @@ producer:
     repository: kafka-data-shipper
     tag: producer-latest
   
-  # Spring Boot Actuator Port
   port: 8080
 
 # -----------------------------------------------------------------------------
@@ -57,6 +51,5 @@ consumer:
     repository: kafka-data-shipper
     tag: consumer-latest
   
-  # Spring Boot Actuator Port
   port: 8080
 

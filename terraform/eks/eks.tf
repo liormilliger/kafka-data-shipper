@@ -73,39 +73,3 @@ resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
 data "tls_certificate" "eks_cluster_cert" {
   url = aws_eks_cluster.eks-cluster.identity[0].oidc[0].issuer
 }
-
-# -----------------------------------------------------------------------------
-# IAM Role for AWS Load Balancer Controller
-# -----------------------------------------------------------------------------
-resource "aws_iam_role" "liorm-alb-controller-role" {
-  name = "${var.cluster_name}-alb-role"
-
-  # This trust policy is CRITICAL. It allows the K8s service account to assume this role.
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Federated = aws_iam_openid_connect_provider.eks_oidc_provider.arn
-        },
-        Action = "sts:AssumeRoleWithWebIdentity",
-        Condition = {
-          StringEquals = {
-            "${replace(aws_iam_openid_connect_provider.eks_oidc_provider.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
-          }
-        }
-      }
-    ]
-  })
-
-  tags = {
-    provisioned_by = "Terraform"
-  }
-}
-
-# CORRECT: Attach the liormALB policy to the ALB controller's role
-resource "aws_iam_role_policy_attachment" "liorm-alb-controller-policy-attachment" {
-  policy_arn = "arn:aws:iam::704505749045:policy/liormALB"
-  role       = aws_iam_role.liorm-alb-controller-role.name
-}

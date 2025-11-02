@@ -18,7 +18,7 @@ terraform {
     }
     tls = {
       source  = "hashicorp/tls"
-      version = ">= 4.0" # Required for data.tls_certificate in eks.tf
+      version = ">= 4.0"
     }
   }
 
