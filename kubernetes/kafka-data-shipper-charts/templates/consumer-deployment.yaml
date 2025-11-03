@@ -15,7 +15,7 @@ spec:
       initContainers:
         - name: wait-for-producer
           image: alpine:3.18
-command: ['sh', '-c', 'apk add --no-cache netcat-openbsd && until nc -z producer-service {{ .Values.producer.port }}; do echo waiting for producer; sleep 2; done;']      
+          command: ['sh', '-c', 'apk add --no-cache netcat-openbsd && until nc -z producer-service {{ .Values.producer.port }}; do echo waiting for producer; sleep 2; done;']      
       containers:
         - name: consumer
           image: "{{ .Values.awsAccountID }}.dkr.ecr.us-east-1.amazonaws.com/{{ .Values.consumer.image.repository }}:{{ .Values.consumer.image.tag }}"
