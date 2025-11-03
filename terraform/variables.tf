@@ -102,8 +102,8 @@ variable "kafka_data_shipper_release_name" {
   default     = "kafka-data-shipper"
 }
 
-variable "kafka_data_shipper_namespace" {
-  description = "Namespace to install the kafka-data-shipper app into."
-  type        = string
-  default     = "shipper-app"
-}
+# variable "kafka_data_shipper_namespace" {
+#   description = "Namespace to install the kafka-data-shipper app into."
+#   type        = string
+#   default     = "kafka"
+# }

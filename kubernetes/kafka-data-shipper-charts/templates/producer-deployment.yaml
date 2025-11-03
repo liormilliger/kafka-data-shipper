@@ -14,9 +14,8 @@ spec:
     spec:
       initContainers:
         - name: wait-for-mysql
-          image: busybox:1.28
-          command: ['sh', '-c', 'until nc -z mysql-service 3306; do echo waiting for mysql; sleep 2; done;']
-      
+          image: alpine:3.18
+          command: ['sh', '-c', 'apk add --no-cache netcat-openbsd && until nc -z mysql-service 3306; do echo waiting for mysql; sleep 2; done;']      
       containers:
         - name: producer
           image: "{{ .Values.awsAccountID }}.dkr.ecr.us-east-1.amazonaws.com/{{ .Values.producer.image.repository }}:{{ .Values.producer.image.tag }}"
@@ -33,16 +32,16 @@ spec:
             - name: SPRING_DATASOURCE_PASSWORD
               value: {{ .Values.mysql.rootPassword | quote }}
           
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: {{ .Values.producer.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 15
+          # livenessProbe:
+          #   httpGet:
+          #     path: /actuator/health/liveness
+          #     port: {{ .Values.producer.port }}
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 15
           
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: {{ .Values.producer.port }}
-            initialDelaySeconds: 30
-            periodSeconds: 10
+          # readinessProbe:
+          #   httpGet:
+          #     path: /actuator/health/readiness
+          #     port: {{ .Values.producer.port }}
+          #   initialDelaySeconds: 30
+          #   periodSeconds: 10

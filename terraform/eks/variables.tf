@@ -48,10 +48,10 @@ variable "kafka_data_shipper_release_name" {
   type        = string
 }
 
-variable "kafka_data_shipper_namespace" {
-  description = "Namespace to install the kafka-data-shipper app into."
-  type        = string
-}
+# variable "kafka_data_shipper_namespace" {
+#   description = "Namespace to install the kafka-data-shipper app into."
+#   type        = string
+# }
 
 variable "private_subnet_ids" {
   description = "List of private subnet IDs from the VPC module."

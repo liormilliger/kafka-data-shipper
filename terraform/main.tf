@@ -29,7 +29,7 @@ module "eks" {
   strimzi_namespace               = var.strimzi_namespace
   kafka_data_shipper_chart_path   = var.kafka_data_shipper_chart_path
   kafka_data_shipper_release_name = var.kafka_data_shipper_release_name
-  kafka_data_shipper_namespace    = var.kafka_data_shipper_namespace
+  # kafka_data_shipper_namespace    = var.kafka_data_shipper_namespace
 
   depends_on = [module.vpc]
   
