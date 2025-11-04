@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: mysql-deployment
+  name: mysql-statefulset
 spec:
   replicas: 1
+  serviceName: mysql-service
   selector:
     matchLabels:
       app: mysql
@@ -44,6 +45,14 @@ spec:
         - name: mysql-initdb
           configMap:
             name: mysql-init-cm
-        - name: mysql-storage
-          persistentVolumeClaim:
-            claimName: mysql-pvc
+            
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-storage
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: {{ .Values.storageClass.name }}
+      resources:
+        requests:
+          storage: {{ .Values.mysql.storage.size }}
